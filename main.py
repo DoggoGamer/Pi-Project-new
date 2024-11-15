@@ -1,8 +1,10 @@
 import os
+from dotenv import load_dotenv
 from openai import OpenAI
 from pathlib import Path
 from playsound import playsound
 
+load_dotenv()  # Load environment variables from .env file
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
