@@ -1,0 +1,18 @@
+user: what is the nearest star
+system: The nearest star to Earth is Proxima Centauri, which is part of the Alpha Centauri star system. Proxima Centauri is located approximately 4.24 light-years away from Earth. It is a red dwarf star and is not visible to the naked eye from Earth. The Alpha Centauri system also includes two other stars, Alpha Centauri A and Alpha Centauri B, which are more similar to our Sun.
+user: can I have some more
+system: Certainly! Here’s more information about Proxima Centauri and the Alpha Centauri system:
+
+### Proxima Centauri
+- **Type:** Proxima Centauri is classified as a red dwarf star (spectral type M5.5).
+- **Luminosity:** It has about 0.0017 times the luminosity of the Sun, making it a very faint star.
+- **Mass:** Proxima Centauri has approximately 12% of the Sun's mass.
+- **Temperature
+user: what is the nearest star
+user: what is the nearest star
+user: what is the nearest star
+user: what is the nearest star
+user: where is the nearest star
+system: The nearest star to Earth is Proxima Centauri, which is located approximately 4.24 light-years away in the constellation Centaurus. Proxima Centauri is part of the Alpha Centauri star system, which also includes Alpha Centauri A and Alpha Centauri B. Proxima Centauri is a red dwarf star and, although it is the closest star to us, it is not visible to the naked eye from Earth due to its low brightness. 
+
+If you have more specific questions about Pro
