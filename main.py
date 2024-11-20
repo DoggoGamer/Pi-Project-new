@@ -6,25 +6,47 @@ from playsound import playsound
 import speech_recognition as sr
 import time
 
-def listen_for_wake_word():
-    recognizer = sr.Recognizer()
+
+recognizer = sr.Recognizer()
+
+
+def listen_for_input():
+#    recognizer = sr.Recognizer()
     
-    while True:
-        with sr.Microphone() as source:
-            print("Listening for 'Computer'...")
-            recognizer.adjust_for_ambient_noise(source)
+    # Listen for the wake word "computer" once
+    with sr.Microphone() as source:
+        print("Listening for wake word 'computer'...")
+        recognizer.adjust_for_ambient_noise(source)
+        while True:
             try:
                 audio = recognizer.listen(source, timeout=1)
                 text = recognizer.recognize_google(audio).lower()
                 if "computer" in text:
-                    print("Wake word detected! Listening for your question...")
-                    with sr.Microphone() as question_source:
-                        recognizer.adjust_for_ambient_noise(question_source)
-                        question_audio = recognizer.listen(question_source)
-                        question = recognizer.recognize_google(question_audio)
-                        print(question)
-                        return question
+                    print("Wake word detected. Listening for input...")
+                    break
             except sr.WaitTimeoutError:
+                continue
+            except sr.UnknownValueError:
+                continue
+            except sr.RequestError:
+                print("Could not request results; check your internet connection")
+                continue
+
+    # Continuously listen for input until "bye computer" is detected
+    while True:
+        with sr.Microphone() as source:
+            recognizer.adjust_for_ambient_noise(source)  # Adjust for ambient noise again
+            try:
+                audio = recognizer.listen(source, timeout=5)
+                text = recognizer.recognize_google(audio).lower()
+                if "bye computer" in text:
+                    print("Goodbye!")
+                    return None
+                print(f"Received input: {text}")
+                return text
+            except sr.WaitTimeoutError:
+                # If no input is detected within 5 seconds, continue listening
+                print("No input detected. Continuing to listen for input.")
                 continue
             except sr.UnknownValueError:
                 continue
@@ -54,39 +76,68 @@ def get_conversation_history():
                 print(f"Error processing line: {line} - {e}")
     return conversation
 
-# Get the user's question through voice
-user_question = listen_for_wake_word()
-append_to_history("user", user_question)
+# Loop to continuously listen for input and process questions
+while True:
+    # Get the user's input through voice
+    user_input = listen_for_input()
+    if user_input is None:
+        break
+    append_to_history("user", user_input)
 
-load_dotenv()  # Load environment variables from .env file
+    load_dotenv()  # Load environment variables from .env file
 
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+    client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
-conversation_history = get_conversation_history()
-conversation_history.append({"role": "user", "content": user_question})
+    conversation_history = get_conversation_history()
+    conversation_history.append({"role": "user", "content": user_input})
 
-response = client.chat.completions.create(
-    model="gpt-4o-mini",
-    max_tokens=100,
-    messages=conversation_history
-)
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        max_tokens=100,
+        messages=conversation_history
+    )
 
-assistant_response = response.choices[0].message.content
-append_to_history("system", assistant_response)
+    assistant_response = response.choices[0].message.content
+    append_to_history("system", assistant_response)
 
-# print(response)
+    speech_file_path = Path(__file__).parent / "speech.mp3"
+    response2 = client.audio.speech.create(
+      model="tts-1",
+      voice="nova",
+      input=assistant_response
+    )
 
-speech_file_path = Path(__file__).parent / "speech.mp3"
-response2 = client.audio.speech.create(
-  model="tts-1",
-  voice="nova",
-  input=assistant_response
-)
+    # Save the audio file
+    with open(speech_file_path, 'wb') as file:
+        for chunk in response2.iter_bytes():
+            file.write(chunk)
 
-# Save the audio file
-with open(speech_file_path, 'wb') as file:
-    for chunk in response2.iter_bytes():
-        file.write(chunk)
+    # Load and play the audio file
+    playsound(speech_file_path)
 
-# Load and play the audio file
-playsound(speech_file_path)
+    # Start a 5-second timer to wait for more input
+    print("Waiting for more input...")
+    time.sleep(5)
+
+    # Check for more input
+#    recognizer = sr.Recognizer()
+    with sr.Microphone() as source:
+        recognizer.adjust_for_ambient_noise(source)
+        try:
+            audio = recognizer.listen(source, timeout=5)
+            text = recognizer.recognize_google(audio).lower()
+            if "bye computer" in text:
+                print("Goodbye!")
+                break
+            print(f"Received input: {text}")
+            append_to_history("user", text)
+            # Continue processing the input as before
+        except sr.WaitTimeoutError:
+            print("No input detected. Returning to wake word listening.")
+            continue
+        except sr.UnknownValueError:
+            continue
+        except sr.RequestError:
+            print("Could not request results; check your internet connection")
+            continue
+    
